@@ -6,7 +6,6 @@ import argparse
 from tqdm import tqdm
 from rdkit import RDLogger, Chem
 import yaml
-
 from seq_graph_retro.utils.parse import get_reaction_info, extract_leaving_groups
 from seq_graph_retro.utils.chem import apply_edits_to_mol
 from seq_graph_retro.utils.edit_mol import canonicalize, generate_reac_set
@@ -15,6 +14,8 @@ from seq_graph_retro.search import BeamSearch
 from seq_graph_retro.molgraph import MultiElement
 lg = RDLogger.logger()
 lg.setLevel(4)
+import logging
+logging.basicConfig(filename='disc.log',level=logging.DEBUG)
 
 try:
     ROOT_DIR = os.environ["SEQ_GRAPH_RETRO"]
@@ -99,8 +100,8 @@ def main():
                         help="Whether to print reaction class accuracy.")
     args = parser.parse_args()
 
-    test_df = pd.read_csv(args.test_file)
-
+    #test_df = pd.read_csv(args.test_file)
+    test_df = pd.read_csv("datasets/uspto-50k/smal_test.csv")
     edits_loaded, edit_net_name = load_edits_model(args)
     lg_loaded, lg_net_name = load_lg_model(args)
 
@@ -145,14 +146,17 @@ def main():
         try:
             if lg_toggles.get("use_rxn_class", False):
                 top_k_nodes = beam_model.run_search(p, max_steps=6, rxn_class=rxn_class)
+                logging.info(f'top_k_nodes:{top_k_nodes}')
             else:
                 top_k_nodes = beam_model.run_search(p, max_steps=6)
-
+                logging.info(f'top_k_nodes:{top_k_nodes}')
             beam_matched = False
             for beam_idx, node in enumerate(top_k_nodes):
+                logging.info(f'{beam_idx} -- node:{node}')
                 pred_edit = node.edit
                 pred_label = node.lg_groups
-
+                logging.info(f'Pred_edit:{pred_edit}')
+                logging.info(f'Pred_label:{pred_label}')
                 if isinstance(pred_edit, list):
                     pred_edit = pred_edit[0]
                 try:
@@ -174,7 +178,7 @@ def main():
             match_perc = np.sum(n_matched[:beam_idx]) / (idx + 1)
             msg += ', t%d: %.4f' % (beam_idx, match_perc)
         pbar.set_description(msg)
-
+    logging.info(f'pred_set:{pred_set}')
 
 if __name__ == "__main__":
     main()
