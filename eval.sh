@@ -12,7 +12,8 @@ python scripts/eval/single_edit_lg.py \
     --lg_exp $LG_EXP \
     --edits_step $EDITS_STEP \
     --lg_step $LG_STEP \
-    --exp_dir models
+    --exp_dir models/ \
+    --csv_file_name 'rxn_unknown'
 
 EDITS_EXP="SingleEdit_14-02-2021--19-26-20"
 EDITS_STEP="step_144228"
@@ -25,5 +26,6 @@ python scripts/eval/single_edit_lg.py \
     --lg_exp $LG_EXP \
     --edits_step $EDITS_STEP \
     --lg_step $LG_STEP \
-    --exp_dir models/
+    --exp_dir models/ \
+    --csv_file_name 'rxn_known'
 

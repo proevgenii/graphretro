@@ -98,6 +98,7 @@ def main():
     parser.add_argument("--use_rxn_class", action='store_true', help="Whether to use reaction class.")
     parser.add_argument("--rxn_class_acc", action="store_true",
                         help="Whether to print reaction class accuracy.")
+    parser.add_argument("--csv_file_name", default='dataset_name', help='name of csv file with preditcions')
     args = parser.parse_args()
 
     #test_df = pd.read_csv(args.test_file)
@@ -108,6 +109,7 @@ def main():
     edits_config = edits_loaded["saveables"]
     lg_config = lg_loaded['saveables']
     lg_toggles = lg_config['toggles']
+    results_df = pd.DataFrame()
 
     if 'tensor_file' in lg_config:
         if not os.path.isfile(lg_config['tensor_file']):
@@ -160,7 +162,7 @@ def main():
                 if isinstance(pred_edit, list):
                     pred_edit = pred_edit[0]
                 try:
-                    pred_set = generate_reac_set(p, pred_edit, pred_label, verbose=False)
+                    pred_set = generate_reac_set(p, pred_edit, pred_label, verbose=True) ### predicted result
                 except BaseException as e:
                     print(e, flush=True)
                     pred_set = None
@@ -169,16 +171,16 @@ def main():
                     n_matched[beam_idx] += 1
                     beam_matched = True
 
+                results_df.loc[int(idx), f'predction_{beam_idx}'] = '.'.join(pred_set)
         except Exception as e:
-            print(e)
+            raise(e)
             continue
-
         msg = 'average score'
         for beam_idx in [1, 3, 5, 10, 20, 50]:
             match_perc = np.sum(n_matched[:beam_idx]) / (idx + 1)
             msg += ', t%d: %.4f' % (beam_idx, match_perc)
         pbar.set_description(msg)
     logging.info(f'pred_set:{pred_set}')
-
+    results_df.to_csv(f'{args.csv_file_name}.csv')
 if __name__ == "__main__":
     main()
